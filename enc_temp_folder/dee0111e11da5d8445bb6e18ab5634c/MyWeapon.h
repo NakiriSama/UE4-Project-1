@@ -6,7 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "MyWeapon.generated.h"
 
-class USkeletalMeshComponent;
 UCLASS()
 class C_API AMyWeapon : public AActor
 {
@@ -16,22 +15,18 @@ public:
 	// Sets default values for this actor's properties
 	AMyWeapon();
 
-	/**获取骨架*/
-	USkeletalMeshComponent* GetWeaponMeshComp() { return WeaponMeshComp; }
+	
+	class USkeletalMeshComponent* GetWeaponMeshComp() { return WeaponMeshComp; }
 
 	void StartFire();
 
 	void StopFire();
-
-	/**当前弹量*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	    uint8 Clip;
+	uint8 Clip;
 
-	/**最大弹量*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
-	    uint8 ClipSetting;
+		uint8 ClipSetting;
 
-	/**蓝图实现方程用于在UI上显示子弹数值*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")
 		void OnFireClipChange(uint8 CurrentBullet);
 
@@ -41,17 +36,18 @@ protected:
 
 	
 
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component" )
-	    USkeletalMeshComponent* WeaponMeshComp;
+	class USkeletalMeshComponent* WeaponMeshComp;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Sound")
-	    TArray<USoundBase*> AKSingleSounds;
+	TArray<USoundBase*> AKSingleSounds;
 
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category = "Weapon")
-	    TSubclassOf<UDamageType> DamageType;
+	TSubclassOf<UDamageType> DamageType;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	    FName MuzzleSocketName;
+	FName MuzzleSocketName;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		FName FireSocketName;
@@ -60,16 +56,16 @@ protected:
 		FName TargetName;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	    UParticleSystem* MuzzleEffect;
+	UParticleSystem* MuzzleEffect;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	    UParticleSystem* DefaultImpactEffect;
+	UParticleSystem* DefaultImpactEffect;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		UParticleSystem* FleshImpactEffect;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	    UParticleSystem* TraceEffect;
+	UParticleSystem* TraceEffect;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Debug")
 	bool DebugWeaponDrawing;
@@ -96,7 +92,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	float TimeBetweenFire;
 
-private
+public:	
 	
 
 };

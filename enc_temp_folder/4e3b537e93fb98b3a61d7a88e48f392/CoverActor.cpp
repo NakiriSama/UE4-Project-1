@@ -10,32 +10,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Controller.h"
 
-// Sets default values
-ACoverActor::ACoverActor()
-{
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-
-
-	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComp"));
-	RootComponent = StaticMeshComp;
-	BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComp"));
-	BoxComp->SetupAttachment(StaticMeshComp);
-
-
-}
-
-// Called when the game starts or when spawned
-void ACoverActor::BeginPlay()
-{
-	Super::BeginPlay();
-	StaticMeshComp->SetCanEverAffectNavigation(true);
-	if (BoxComp)
-	{
-		BoxComp->OnComponentBeginOverlap.AddDynamic(this, &ACoverActor::OnCompBeginOverlap);
-		BoxComp->OnComponentEndOverlap.AddDynamic(this, &ACoverActor::OnCompEndOverlap);
-	}
-
-}
 void ACoverActor::OnCompBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
 	if (OtherActor->IsA<ACCharacter>())
@@ -159,7 +133,32 @@ bool ACoverActor::IsCloseToCorner()
 	return false;
 }
 
+// Sets default values
+ACoverActor::ACoverActor()
+{
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	
 
+	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComp"));
+	RootComponent = StaticMeshComp;
+	BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComp"));
+	BoxComp->SetupAttachment(StaticMeshComp);
+	
+
+}
+
+// Called when the game starts or when spawned
+void ACoverActor::BeginPlay()
+{
+	Super::BeginPlay();
+	StaticMeshComp->SetCanEverAffectNavigation(true);
+	if (BoxComp)
+	{
+		BoxComp->OnComponentBeginOverlap.AddDynamic(this, &ACoverActor::OnCompBeginOverlap);
+		BoxComp->OnComponentEndOverlap.AddDynamic(this, &ACoverActor::OnCompEndOverlap);
+	}
+	
+}
 
 
 
