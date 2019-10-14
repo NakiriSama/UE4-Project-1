@@ -96,13 +96,28 @@ void AMyWeapon::Fire()
 			FVector TraceEndPoint = TraceEnd;
 			QueryParams.bReturnPhysicalMaterial = true;
 
+			FHitResult TrueHit;
+			FCollisionQueryParams QueryParams2;
+			QueryParams2.AddIgnoredActor(MyOwner);
+			QueryParams2.AddIgnoredActor(this);
+			QueryParams2.bTraceComplex = true;
+			GetWorld()->LineTraceSingleByChannel(TrueHit, FireLocation, TraceEndPoint, TRACECHANNEL_WEAPON, QueryParams2);
+
+
 			if (GetWorld()->LineTraceSingleByChannel(Hit, CrosshairLocation, TraceEnd, TRACECHANNEL_WEAPON, QueryParams))
 			{
+			
+			
+			
+
+				if (TrueHit.GetActor() != Hit.GetActor())
+				{
+					UE_LOG(LogTemp, Log, TEXT("Same"));
+					Hit = TrueHit;
+				}
+
 				AActor* HitActor = Hit.GetActor();
-
 				float TrueDamage = BaseDamage;
-
-
 				TraceEndPoint = Hit.ImpactPoint;
 
 				EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());

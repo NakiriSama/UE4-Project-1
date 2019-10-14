@@ -181,6 +181,7 @@ void ACCharacter::BeginPlay()
 	RightCornerCamera = LeftCornerCamera = DefaultCameraLocation;
 
 	NewCameraLocation = RightCameraMove + DefaultCameraLocation;
+
 	bIsCrouching = false;
 	//ZoonoutCooldown = true;
 	FActorSpawnParameters SpawnParameter;

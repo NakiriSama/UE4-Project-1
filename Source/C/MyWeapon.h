@@ -96,7 +96,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	float TimeBetweenFire;
 
-private
+private:
 	
 
 };

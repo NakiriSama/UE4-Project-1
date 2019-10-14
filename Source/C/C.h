@@ -10,3 +10,4 @@
 #define SURFACE_AIBODY     SurfaceType4
 #define TRACECHANNEL_WEAPON ECC_GameTraceChannel1
 #define TRACECHANNEL_AISEEING ECC_GameTraceChannel2
+
