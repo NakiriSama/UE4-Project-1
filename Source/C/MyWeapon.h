@@ -23,13 +23,16 @@ public:
 
 	void StopFire();
 
+	/**最大弹量*/
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+		uint8 ClipSetting;
+
 	/**当前弹量*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	    uint8 Clip;
+		uint8 Clip;
 
-	/**最大弹量*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
-	    uint8 ClipSetting;
+
+	
 
 	/**蓝图实现方程用于在UI上显示子弹数值*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")
@@ -39,7 +42,8 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	
+
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component" )
 	    USkeletalMeshComponent* WeaponMeshComp;
@@ -81,6 +85,8 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	float BaseDamage;
+
+
 
 	float LastFireTime;
 

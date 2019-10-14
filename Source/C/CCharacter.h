@@ -254,6 +254,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Player", meta = (ClampMin = 0.1, ClampMax = 100))
 		float ZoomoutCameraSpeed;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Player", meta = (ClampMin = 0.1, ClampMax = 100))
+		float CoverCameraSpeed;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Movement")
 	    float StandCoverSpeed;
 
@@ -264,6 +267,15 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "CameraMove", meta = (ClampMin = -200, ClampMax = 200))
 		FVector LeftCameraMove;
+
+	UPROPERTY(EditDefaultsOnly, Category = "CameraMove", meta = (ClampMin = -200, ClampMax = 200))
+		FVector CenterCameraLocation;
+
+	UPROPERTY(EditDefaultsOnly, Category = "CameraMove", meta = (ClampMin = -200, ClampMax = 200))
+		FVector RightCameraCoverMove;
+
+	UPROPERTY(EditDefaultsOnly, Category = "CameraMove", meta = (ClampMin = -200, ClampMax = 200))
+		FVector LeftCameraCoverMove;
 
 	FVector RightCornerCamera;
 

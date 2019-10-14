@@ -179,8 +179,16 @@ void ACCharacter::BeginPlay()
 	//AMyWeapon* CurrentWeapon = GetWorld()->SpawnActor<AMyWeapon>()
 	DefaultCameraLocation = FollowCamera->GetRelativeTransform().GetLocation();
 	RightCornerCamera = LeftCornerCamera = DefaultCameraLocation;
-
-	NewCameraLocation = RightCameraMove + DefaultCameraLocation;
+	if (CenterCameraLocation.Z == NULL)
+	{
+		Log(ELogLevel::WARNING, "Need to set CenterCameraLocation!!");
+		CenterCameraLocation = DefaultCameraLocation;
+	}
+	else
+	{
+		NewCameraLocation = RightCameraMove + CenterCameraLocation;
+	}
+	NewCameraLocation = RightCameraMove + CenterCameraLocation;
 
 	bIsCrouching = false;
 	//ZoonoutCooldown = true;
@@ -309,18 +317,35 @@ void ACCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	//float CurrentFOV = MarkingMode ? ZoomFOV : DefaultFOV;
-	NewCameraLocation = RightCameraMove + DefaultCameraLocation;
+	NewCameraLocation = RightCameraMove + CenterCameraLocation;
+
+	FVector NewCoverCameraLocation;
+	//if (IsInCover)
+	//{
+	//	NewCoverCameraLocation = CenterCameraLocation + RightCameraCoverMove;
+	//	if (CoverDirection< 0)
+	//	{
+	//		NewCoverCameraLocation = CenterCameraLocation + LeftCameraCoverMove;
+	//	}
+	//	FVector NewCoverLocation = FMath::VInterpTo(FollowCamera->GetRelativeTransform().GetLocation(), NewCoverCameraLocation, DeltaTime, CoverCameraSpeed);
+	//	FollowCamera->SetRelativeLocation(NewCoverLocation);
+	//}
+	//else
+	//{
+	//	FVector NewCL = FMath::VInterpTo(FollowCamera->GetRelativeTransform().GetLocation(), DefaultCameraLocation, DeltaTime, ZoomoutCameraSpeed);
+	//	FollowCamera->SetRelativeLocation(NewCL);
+	//}
 	if (MarkingMode)
 	{
 		
 		
 		if (CoverDirection < 0 && IsInCover )
 		{
-			NewCameraLocation = LeftCameraMove + DefaultCameraLocation;
+			NewCameraLocation = LeftCameraMove + CenterCameraLocation;
 		} 
 	    if (CoverDirection > 0 && IsInCover)
 	    {
-			NewCameraLocation = RightCameraMove + DefaultCameraLocation;
+			NewCameraLocation = RightCameraMove + CenterCameraLocation;
 	    }
 		
 			

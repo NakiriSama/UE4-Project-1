@@ -34,7 +34,7 @@ AMyWeapon::AMyWeapon()
 	TargetName = "Target";
 	BaseDamage = 20.0f;
 	FireRate = 600.0f;
-	ClipSetting = 6;
+	ClipSetting =6;
 	
 	
 }
@@ -85,8 +85,8 @@ void AMyWeapon::Fire()
 
 			//TraceEnd = (WeaponMeshComp->GetSocketLocation(MuzzleSocketName) - WeaponMeshComp->GetSocketLocation(FireSocketName)) * 10000;
 
-
-
+			FVector WeaponMeshLocation;
+			WeaponMeshLocation = WeaponMeshComp->GetSocketLocation(FireSocketName);
 			FireLocation = WeaponMeshComp->GetSocketLocation(MuzzleSocketName);
 			FHitResult Hit;
 			FCollisionQueryParams QueryParams;
@@ -103,24 +103,31 @@ void AMyWeapon::Fire()
 			QueryParams2.bTraceComplex = true;
 			GetWorld()->LineTraceSingleByChannel(TrueHit, FireLocation, TraceEndPoint, TRACECHANNEL_WEAPON, QueryParams2);
 
-
+			FHitResult TestHit;
+			FCollisionQueryParams QueryParams3;
+			QueryParams3.bTraceComplex=true;
+		
+			
 			if (GetWorld()->LineTraceSingleByChannel(Hit, CrosshairLocation, TraceEnd, TRACECHANNEL_WEAPON, QueryParams))
 			{
+				FHitResult FinalHit;
+				QueryParams3.AddIgnoredActor(Hit.GetActor());
+				GetWorld()->LineTraceSingleByChannel(TestHit, Hit.ImpactPoint, WeaponMeshLocation, TRACECHANNEL_WEAPON, QueryParams3);
 			
-			
-			
+				AActor* BackTraceHit = TestHit.GetActor();
+				FinalHit = TrueHit;
+					if (BackTraceHit && BackTraceHit->IsA<ACCharacter>())
+					{
+						FinalHit = Hit;
+					}
+										
+					
 
-				if (TrueHit.GetActor() != Hit.GetActor())
-				{
-					UE_LOG(LogTemp, Log, TEXT("Same"));
-					Hit = TrueHit;
-				}
-
-				AActor* HitActor = Hit.GetActor();
+				AActor* HitActor = FinalHit.GetActor();
 				float TrueDamage = BaseDamage;
-				TraceEndPoint = Hit.ImpactPoint;
+				TraceEndPoint = FinalHit.ImpactPoint;
 
-				EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+				EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(FinalHit.PhysMaterial.Get());
 				if (SurfaceType == SURFACE_FLESHHEAD)
 				{
 					TrueDamage *= 4.0;
@@ -133,7 +140,7 @@ void AMyWeapon::Fire()
 				{
 					TrueDamage = 1.f;
 				}
-				UGameplayStatics::ApplyPointDamage(HitActor, TrueDamage, EyeRotation.Vector(), Hit, MyOwner->GetInstigatorController(), this, DamageType);
+				UGameplayStatics::ApplyPointDamage(HitActor, TrueDamage, EyeRotation.Vector(), FinalHit, MyOwner->GetInstigatorController(), this, DamageType);
 
 				UParticleSystem* SelectEffect = nullptr;
 
@@ -150,7 +157,7 @@ void AMyWeapon::Fire()
 				}
 				if (SelectEffect)
 				{
-					UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+					UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectEffect, FinalHit.ImpactPoint, FinalHit.ImpactNormal.Rotation());
 				}
 
 			}
