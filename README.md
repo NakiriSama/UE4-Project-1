@@ -1,6 +1,7 @@
 # UE4-Project-1 [Beginner]
 
 Developed with Unreal Engine 4
+Unreal Version: 4.22.3
 
 GameBGM -- I'm No Different Than You - Blacklist
 
