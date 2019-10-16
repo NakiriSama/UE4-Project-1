@@ -75,7 +75,7 @@ class ACCharacter : public ACharacter
 
 public:
 	ACCharacter();
-
+	UFUNCTION(BlueprintCallable)
 	AMyWeapon* GetWeaponComp() const { return CurrentWeapon; }
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Camera")
@@ -129,7 +129,7 @@ public:
 	float PreviousMagic;
 	float MagicValue;
 
-
+	float Velocity;
 
 	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	//	float MaxTurn;
@@ -143,6 +143,9 @@ public:
 	/**触发隐形技能*/
 	UFUNCTION()
 	void ToggleInvisibility();
+
+	UFUNCTION()
+		void ToggleReload();
 
 	/**触发透视技能*/
 	UFUNCTION()
@@ -240,11 +243,14 @@ public:
 	UFUNCTION()
 		void XRayTimelineBeginTimer();
 
+	int8 GetCoverDirction() const { return CoverDirection; }
+
 
 protected:
 	void FootstepSurface();
 
-	float MyDeltaTime;
+	float CornerDirection;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 		float MouseAxisTurn;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
@@ -266,16 +272,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Player", meta = (ClampMin = 0.1, ClampMax = 100))
 		float CoverCameraSpeed;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Player", meta = (ClampMin = 0.1, ClampMax = 100))
+		float CoverOutCameraSpeed;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Movement")
 	    float StandCoverSpeed;
 
 	//float DefaultFOV;
 
-	UPROPERTY(EditDefaultsOnly, Category = "CameraMove", meta = (ClampMin = -200, ClampMax = 200))
-		FVector RightCameraMove;
-
-	UPROPERTY(EditDefaultsOnly, Category = "CameraMove", meta = (ClampMin = -200, ClampMax = 200))
-		FVector LeftCameraMove;
 
 	UPROPERTY(EditDefaultsOnly, Category = "CameraMove", meta = (ClampMin = -200, ClampMax = 200))
 		FVector CenterCameraLocation;
@@ -292,11 +296,22 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "CameraMove", meta = (ClampMin = -200, ClampMax = 200))
 		FVector LeftCameraCornerMove;
 
+	UPROPERTY(EditDefaultsOnly, Category = "CameraMove", meta = (ClampMin = -200, ClampMax = 200))
+		FVector RightSocketOffset;
+
+	UPROPERTY(EditDefaultsOnly, Category = "CameraMove", meta = (ClampMin = -200, ClampMax = 200))
+		FVector LeftSocketOffset;
+
+	UPROPERTY(EditDefaultsOnly, Category = "CameraMove", meta = (ClampMin = -200, ClampMax = 200))
+		FVector MidSocketOffset;
+
+	FVector DefaultSocketOffset;
+
 	FVector RightCornerCamera;
 
 	FVector LeftCornerCamera;
 
-	FVector DefaultSocketOffset;
+	
 
 	/** 是否打开屏幕的Log显示 */
 	UPROPERTY(EditDefaultsOnly, Category = "Log")
@@ -316,7 +331,6 @@ protected:
 	void QuitMarking();
 
 	void BeginCrouch();
-
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	    UPawnNoiseEmitterComponent* NoiseEmitterComp;
@@ -459,7 +473,7 @@ private:
 
 	bool IsInCorner;
 
-	float Velocity;
+
 
 	float CoverValue;
 

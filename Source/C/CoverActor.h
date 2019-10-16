@@ -35,7 +35,7 @@ private:
 public:	
 	ACoverActor();
 
-	bool IsCloseToCorner();
+	bool IsCloseToCorner(float& Direction);
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	class UStaticMeshComponent* StaticMeshComp;

@@ -60,7 +60,7 @@ ACCharacter::ACCharacter()
 	Xray.MagicValue = 0.0f;
 	
 	GetCharacterMovement()->MaxWalkSpeed = DefaultSpeed;
-	RightCameraMove = FVector(0.0, 0.0, 0.0);
+	
 	IsDead = false;
 	IsCrouchWalking = false;
 	IsStandCover = false;
@@ -172,26 +172,18 @@ void ACCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputCo
 
 	//触发透视按键绑定
 	PlayerInputComponent->BindAction("XRay", IE_Pressed, this, &ACCharacter::ToggleXRay);
+
+	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ACCharacter::ToggleReload);
 }
 
 void ACCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	DefaultSocketOffset = CameraBoom->SocketOffset;
+	DefaultSocketOffset = RightSocketOffset;
 	//AMyWeapon* CurrentWeapon = GetWorld()->SpawnActor<AMyWeapon>()
 	DefaultCameraLocation = FollowCamera->GetRelativeTransform().GetLocation();
 	RightCornerCamera = LeftCornerCamera = DefaultCameraLocation;
-	if (CenterCameraLocation.Z == NULL)
-	{
-		Log(ELogLevel::WARNING, "Need to set CenterCameraLocation!!");
-		CenterCameraLocation = DefaultCameraLocation;
-	}
-	else
-	{
-		NewCameraLocation = RightCameraMove + CenterCameraLocation;
-	}
-	NewCameraLocation = RightCameraMove + CenterCameraLocation;
-
+	
 	bIsCrouching = false;
 	//ZoonoutCooldown = true;
 	FActorSpawnParameters SpawnParameter;
@@ -311,7 +303,7 @@ void ACCharacter::BeginPlay()
 	Crosshair = CreateWidget<UUserWidget>(GetWorld(), CrosshairBPReference);
 
 
-	NewCameraLocation = RightCameraMove + CenterCameraLocation;
+	
 }
 
 
@@ -319,7 +311,7 @@ void ACCharacter::BeginPlay()
 void ACCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	MyDeltaTime = DeltaTime;
+	
 	//float CurrentFOV = MarkingMode ? ZoomFOV : DefaultFOV;
 	Velocity = GetVelocity().Size();
 	if (MarkingMode || IsInCorner)
@@ -332,12 +324,20 @@ void ACCharacter::Tick(float DeltaTime)
 		FVector NewCoverCameraLocation;
 	
 		float TempCameraSpeed = CoverCameraSpeed;
-		NewCoverCameraLocation = CenterCameraLocation + RightCameraCoverMove;
-		if (CoverDirection < 0)
+		NewCoverCameraLocation = MidSocketOffset;
+		if (Cover->IsCloseToCorner(CornerDirection))
 		{
-			NewCoverCameraLocation = CenterCameraLocation + LeftCameraCoverMove;
+			if (CoverDirection <0)
+			{
+				NewCoverCameraLocation = LeftCameraCoverMove;
+			}
+			else
+			{
+				NewCoverCameraLocation = RightCameraCoverMove;
+			}
+			
 		}
-
+		
 		if (CoverDirection < 0 && MarkingMode)
 		{
 			NewCoverCameraLocation = LeftCameraCornerMove + CenterCameraLocation;
@@ -377,7 +377,7 @@ void ACCharacter::Tick(float DeltaTime)
 		ResetTimeline();
 		float NewZoominLocation = FMath::FInterpTo(FollowCamera->FieldOfView, 90.0f, DeltaTime, ZoomoutCameraSpeed);
 		//FVector NewCL = FMath::VInterpTo(CameraBoom->GetRelativeTransform().GetLocation(), DefaultCameraLocation, DeltaTime, ZoomoutCameraSpeed);
-		FVector NewSocketOffLocation = FMath::VInterpTo(CameraBoom->SocketOffset,DefaultSocketOffset, DeltaTime, CoverCameraSpeed);
+		FVector NewSocketOffLocation = FMath::VInterpTo(CameraBoom->SocketOffset,DefaultSocketOffset, DeltaTime, CoverOutCameraSpeed);
 		//CameraBoom->SetRelativeLocation(NewCL);
 		FollowCamera->SetFieldOfView(NewZoominLocation);
 		CameraBoom->SocketOffset = NewSocketOffLocation;
@@ -586,6 +586,7 @@ void ACCharacter::ToggleCover()
 		}
 		else
 		{
+		
 			GetCharacterMovement()->bUseControllerDesiredRotation = true;
 			GetCharacterMovement()->bOrientRotationToMovement = true;
 			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
@@ -660,6 +661,11 @@ void ACCharacter::ToggleInvisibility()
 	}
 	
 	
+}
+
+void ACCharacter::ToggleReload()
+{
+	CurrentWeapon->ChangeClip(CurrentWeapon->ClipSetting);
 }
 
 void ACCharacter::ToggleXRay()
@@ -862,17 +868,18 @@ void ACCharacter::Marking()
 		
 		if (IsInCover)
 		{
-
-				if (Cover->IsCloseToCorner())
+			float Direction;
+				if (Cover->IsCloseToCorner(Direction) && (Direction <= 0.0f) == (CoverDirection <= 0.0f))
 				{
 					//GetCharacterMovement()->Activate(true);
 					//SetActorLocation();
+				
 					FVector AddForce;
-					if (CoverDirection > 0)
+					if (Direction >= 0 )
 					{
 						AddForce = (CoverDirectionMovement * 300) + FVector(0, 0, 1) * 80;
 					}
-					else
+					else if(Direction < 0)
 					{
 						AddForce = (CoverDirectionMovement * -400) + FVector(0, 0, 1) * 80;
 					}
@@ -1043,10 +1050,18 @@ void ACCharacter::MoveRight(float Value)
 	if (CoverValue < 0)
 	{
 		CoverDirection = -1;
+		if (IsInCover)
+		{
+			//DefaultSocketOffset = LeftSocketOffset;
+		}
 	}
 	else if(CoverValue > 0)
 	{
 		CoverDirection = 1;
+		if (IsInCover)
+		{
+			//DefaultSocketOffset = RightSocketOffset;
+		}
 	}
 	if (IsInCorner)
 	{

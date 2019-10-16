@@ -8,7 +8,9 @@
 #include "Components/BoxComponent.h"
 #include "CCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/Controller.h"
+
 
 // Sets default values
 ACoverActor::ACoverActor()
@@ -132,8 +134,9 @@ void ACoverActor::DetermineMovementDirection(FVector& MovementDirection, FRotato
 	}
 }
 
-bool ACoverActor::IsCloseToCorner()
+bool ACoverActor::IsCloseToCorner(float& Direction)
 {
+	FVector RelativeLocation;
 	const FName AvailableSockets[4] =
 	{
 		FName("FR"),
@@ -153,7 +156,20 @@ bool ACoverActor::IsCloseToCorner()
 		 FVector NewLocation = SocketLocation - PlayerLocation;
 		 if (NewLocation.Size() <TestLength)
 		 {
-			 return true;
+			
+			 
+			 RelativeLocation = Player->GetTransform().InverseTransformPosition(SocketLocation);
+			 Direction = RelativeLocation.Y;
+			 UE_LOG(LogTemp, Log, TEXT("%f %f %i"), RelativeLocation.Y, RelativeLocation.Z, Player->GetCoverDirction());
+			 if (Player->GetCoverDirction() > 0 && (Direction <= 60.0f && Direction > 0.0f ))
+			 {
+				 return true;
+			 }
+			
+			 if (Player->GetCoverDirction() < 0 && (Direction >= -60.0f && Direction < 0.0f))
+			 {
+				 return true;
+			 }
 		 }
 	}
 	return false;

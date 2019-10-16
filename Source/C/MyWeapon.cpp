@@ -125,6 +125,7 @@ void AMyWeapon::Fire()
 			{
 				FHitResult FinalHit;
 				QueryParams3.AddIgnoredActor(Hit.GetActor());
+				
 				GetWorld()->LineTraceSingleByChannel(TestHit, Hit.ImpactPoint, WeaponMeshLocation, TRACECHANNEL_WEAPON, QueryParams3);
 				GetWorld()->LineTraceSingleByChannel(TrueHit, FireLocation, Hit.ImpactPoint, TRACECHANNEL_WEAPON, QueryParams2);
 				AActor* BackTraceHit = TestHit.GetActor();
