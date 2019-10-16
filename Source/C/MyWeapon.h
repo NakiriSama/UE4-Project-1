@@ -24,7 +24,7 @@ public:
 	void StopFire();
 
 	/**最大弹量*/
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,Category = "Weapon")
 		uint8 ClipSetting;
 
 	/**当前弹量*/
@@ -37,6 +37,11 @@ public:
 	/**蓝图实现方程用于在UI上显示子弹数值*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")
 		void OnFireClipChange(uint8 CurrentBullet);
+	UFUNCTION(BlueprintImplementableEvent)
+		void ChangeColor();
+
+	UFUNCTION(BlueprintCallable)
+		void ChangeClip(uint8 BulletNumber);
 
 protected:
 	// Called when the game starts or when spawned

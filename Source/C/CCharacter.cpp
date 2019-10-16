@@ -120,6 +120,8 @@ ACCharacter::ACCharacter()
 
 	//ZoomFOV = 60.0f;
 	WeaponSocketName = WEAPON_SOCKET_NORMAL;
+
+	//GetController()->SetControlRotation(SpringArmRotationTarget);
 	
 	
 
@@ -175,7 +177,7 @@ void ACCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputCo
 void ACCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	DefaultSocketOffset = CameraBoom->SocketOffset;
 	//AMyWeapon* CurrentWeapon = GetWorld()->SpawnActor<AMyWeapon>()
 	DefaultCameraLocation = FollowCamera->GetRelativeTransform().GetLocation();
 	RightCornerCamera = LeftCornerCamera = DefaultCameraLocation;
@@ -308,6 +310,8 @@ void ACCharacter::BeginPlay()
 
 	Crosshair = CreateWidget<UUserWidget>(GetWorld(), CrosshairBPReference);
 
+
+	NewCameraLocation = RightCameraMove + CenterCameraLocation;
 }
 
 
@@ -315,63 +319,74 @@ void ACCharacter::BeginPlay()
 void ACCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	MyDeltaTime = DeltaTime;
 	//float CurrentFOV = MarkingMode ? ZoomFOV : DefaultFOV;
-	NewCameraLocation = RightCameraMove + CenterCameraLocation;
+	Velocity = GetVelocity().Size();
+	if (MarkingMode || IsInCorner)
+	{
+		SpreadCrosshair(Velocity);
+	}
+	
+	if (IsInCover)
+	{
+		FVector NewCoverCameraLocation;
+	
+		float TempCameraSpeed = CoverCameraSpeed;
+		NewCoverCameraLocation = CenterCameraLocation + RightCameraCoverMove;
+		if (CoverDirection < 0)
+		{
+			NewCoverCameraLocation = CenterCameraLocation + LeftCameraCoverMove;
+		}
 
-	FVector NewCoverCameraLocation;
-	//if (IsInCover)
-	//{
-	//	NewCoverCameraLocation = CenterCameraLocation + RightCameraCoverMove;
-	//	if (CoverDirection< 0)
-	//	{
-	//		NewCoverCameraLocation = CenterCameraLocation + LeftCameraCoverMove;
-	//	}
-	//	FVector NewCoverLocation = FMath::VInterpTo(FollowCamera->GetRelativeTransform().GetLocation(), NewCoverCameraLocation, DeltaTime, CoverCameraSpeed);
-	//	FollowCamera->SetRelativeLocation(NewCoverLocation);
-	//}
+		if (CoverDirection < 0 && MarkingMode)
+		{
+			NewCoverCameraLocation = LeftCameraCornerMove + CenterCameraLocation;
+			TempCameraSpeed = ZoominCameraSpeed;
+		}
+		if (CoverDirection > 0 && MarkingMode)
+		{
+			NewCoverCameraLocation = RightCameraCornerMove + CenterCameraLocation;
+			TempCameraSpeed = ZoominCameraSpeed;
+		}
+		
+		FVector NewCoverLocation = FMath::VInterpTo(CameraBoom->SocketOffset, NewCoverCameraLocation, DeltaTime, TempCameraSpeed);
+		//FollowCamera->SetRelativeLocation(NewCoverLocation);
+		//CameraBoom->SocketOffset=
+		CameraBoom->SocketOffset = NewCoverLocation;
+		
+	}
 	//else
 	//{
 	//	FVector NewCL = FMath::VInterpTo(FollowCamera->GetRelativeTransform().GetLocation(), DefaultCameraLocation, DeltaTime, ZoomoutCameraSpeed);
 	//	FollowCamera->SetRelativeLocation(NewCL);
 	//}
-	if (MarkingMode)
+
+	if (MarkingMode && !IsInCover)
 	{
 		
-		
-		if (CoverDirection < 0 && IsInCover )
-		{
-			NewCameraLocation = LeftCameraMove + CenterCameraLocation;
-		} 
-	    if (CoverDirection > 0 && IsInCover)
-	    {
-			NewCameraLocation = RightCameraMove + CenterCameraLocation;
-	    }
-		
-			
-		
 
-		FVector NewCL = FMath::VInterpTo(FollowCamera->GetRelativeTransform().GetLocation(), NewCameraLocation, DeltaTime, ZoominCameraSpeed);
-		FollowCamera->SetRelativeLocation(NewCL);
-
-		//NewCameraLocation.
-		//float CurrentFOV = ZoomFOV;
-		//float NewFOV = FMath::FInterpTo(FollowCamera->FieldOfView, CurrentFOV, DeltaTime, ZoominCameraSpeed);
-		//FollowCamera->SetFieldOfView(NewFOV);
-
+		float NewZoominLocation = FMath::FInterpTo(FollowCamera->FieldOfView, ZoomFOV, DeltaTime, ZoominCameraSpeed);
+	
+		FollowCamera->SetFieldOfView(NewZoominLocation);
+		//FollowCamera->SetRelativeLocation(NewZoominLocation);
+		//CameraBoom->SetRelativeLocation(NewZoominLocation);
 
 	}
-	else
+	else if(!MarkingMode && !IsInCover)
 	{
-		/*float CurrentFOV = DefaultFOV;
-		float NewFOV = FMath::FInterpTo(FollowCamera->FieldOfView, CurrentFOV, DeltaTime, ZoomoutCameraSpeed);
-		FollowCamera->SetFieldOfView(NewFOV);*/
-		FVector NewCL = FMath::VInterpTo(FollowCamera->GetRelativeTransform().GetLocation(), DefaultCameraLocation, DeltaTime, ZoomoutCameraSpeed);
-		FollowCamera->SetRelativeLocation(NewCL);
+		ResetTimeline();
+		float NewZoominLocation = FMath::FInterpTo(FollowCamera->FieldOfView, 90.0f, DeltaTime, ZoomoutCameraSpeed);
+		//FVector NewCL = FMath::VInterpTo(CameraBoom->GetRelativeTransform().GetLocation(), DefaultCameraLocation, DeltaTime, ZoomoutCameraSpeed);
+		FVector NewSocketOffLocation = FMath::VInterpTo(CameraBoom->SocketOffset,DefaultSocketOffset, DeltaTime, CoverCameraSpeed);
+		//CameraBoom->SetRelativeLocation(NewCL);
+		FollowCamera->SetFieldOfView(NewZoominLocation);
+		CameraBoom->SocketOffset = NewSocketOffLocation;
 	}
 
 
-	Velocity = GetVelocity().Size();
+	
+
+
 
 	if (bIsCrouching == true && (Velocity > 0.f) && !IsInCover)
 	{
@@ -841,7 +856,10 @@ void ACCharacter::Marking()
 	if (!IsCrouchWalking || IsInCover)
 	{
 		//Crosshair->AddToViewport();
-		SpawnCrosshair();
+		//FVector NewCL = FMath::VInterpTo(FollowCamera->GetRelativeTransform().GetLocation(), NewCameraLocation, MyDeltaTime, ZoominCameraSpeed);
+	   // FollowCamera->SetRelativeLocation(NewZoominLocation);
+		
+		
 		if (IsInCover)
 		{
 
@@ -872,6 +890,10 @@ void ACCharacter::Marking()
 			
 		}
 		
+		if (IsInCorner || !IsInCover)
+		{
+			SpawnCrosshair();
+		}
 		//改变瞄准状态下CameraLag，移动速度
 		CameraBoom->CameraLagSpeed = 50;
 		CameraBoom->CameraRotationLagSpeed = 50;
@@ -894,10 +916,12 @@ void ACCharacter::Marking()
 
 void ACCharacter::QuitMarking()
 {
-	RemoveCrosshair();
+	
 	CameraBoom->CameraRotationLagSpeed = 30;
 	CameraBoom->CameraLagSpeed = 10;
 	//Crosshair->RemoveFromViewport();
+	//FVector NewCL = FMath::VInterpTo(FollowCamera->GetRelativeTransform().GetLocation(), DefaultCameraLocation, MyDeltaTime, ZoomoutCameraSpeed);
+	//FollowCamera->SetRelativeLocation(NewCL);
 	if (!IsInCover)
 	{
 	
@@ -906,7 +930,7 @@ void ACCharacter::QuitMarking()
 	
 	GetCharacterMovement()->MaxWalkSpeed = DefaultSpeed;
 	MarkingMode = false;
-	
+	RemoveCrosshair();
 	if (IsInCorner)
 	{
 		FVector AddForce;
@@ -982,7 +1006,9 @@ void ACCharacter::FootstepSurface()
 
 void ACCharacter::MoveForward(float Value)
 {
+
 	//FootstepSurface();
+
 	IsCrouchZooming = bIsCrouching && MarkingMode;
 	
 	if (IsInCorner)
@@ -1011,6 +1037,7 @@ void ACCharacter::MoveForward(float Value)
 
 void ACCharacter::MoveRight(float Value)
 {
+
 	//FootstepSurface();
 	IsCrouchZooming = bIsCrouching && MarkingMode && !IsInCover;
 	if (CoverValue < 0)

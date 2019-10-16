@@ -181,11 +181,20 @@ public:
 		void SetCanBeInXRay();
 
 	/**显示准星———蓝图实现方程*/
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Crosshair")
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
 		void SpawnCrosshair();
 
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+		void SpreadCrosshair(float Velocity);
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+		void ConvergeCrosshair();
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+		void ResetTimeline();
+
 	/**隐藏准星———蓝图实现方程*/
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Crosshair")
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
 		void RemoveCrosshair();
 
 	UFUNCTION(BlueprintPure, Category = "Magic")
@@ -231,15 +240,15 @@ public:
 	UFUNCTION()
 		void XRayTimelineBeginTimer();
 
+
 protected:
 	void FootstepSurface();
 
+	float MyDeltaTime;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 		float MouseAxisTurn;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 		float MouseLookUpAxis;
-
-
 
 
 	/*————————视角移动以及相关变量*/
@@ -277,9 +286,17 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "CameraMove", meta = (ClampMin = -200, ClampMax = 200))
 		FVector LeftCameraCoverMove;
 
+	UPROPERTY(EditDefaultsOnly, Category = "CameraMove", meta = (ClampMin = -200, ClampMax = 200))
+		FVector RightCameraCornerMove;
+
+	UPROPERTY(EditDefaultsOnly, Category = "CameraMove", meta = (ClampMin = -200, ClampMax = 200))
+		FVector LeftCameraCornerMove;
+
 	FVector RightCornerCamera;
 
 	FVector LeftCornerCamera;
+
+	FVector DefaultSocketOffset;
 
 	/** 是否打开屏幕的Log显示 */
 	UPROPERTY(EditDefaultsOnly, Category = "Log")

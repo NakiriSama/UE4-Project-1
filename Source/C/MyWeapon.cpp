@@ -57,6 +57,19 @@ void AMyWeapon::StopFire()
 	GetWorldTimerManager().ClearTimer(TimerHandleForFire);
 }
 
+void AMyWeapon::ChangeClip(uint8 BulletNumber)
+{
+	if (BulletNumber == ClipSetting)
+	{
+		Clip = ClipSetting;
+	}
+	else
+	{
+		Clip -= BulletNumber;
+	}
+	ChangeColor();
+}
+
 // Called when the game starts or when spawned
 
 
@@ -68,8 +81,8 @@ void AMyWeapon::Fire()
 	{
 		if (MyOwner)
 		{
-			Clip--;
-			OnFireClipChange(Clip); 
+			ChangeClip(1);
+			//OnFireClipChange(Clip); 
 			FVector FireLocation;
 			FVector CrosshairLocation;
 			FRotator EyeRotation;
@@ -101,7 +114,7 @@ void AMyWeapon::Fire()
 			QueryParams2.AddIgnoredActor(MyOwner);
 			QueryParams2.AddIgnoredActor(this);
 			QueryParams2.bTraceComplex = true;
-			GetWorld()->LineTraceSingleByChannel(TrueHit, FireLocation, TraceEndPoint, TRACECHANNEL_WEAPON, QueryParams2);
+			
 
 			FHitResult TestHit;
 			FCollisionQueryParams QueryParams3;
@@ -113,7 +126,7 @@ void AMyWeapon::Fire()
 				FHitResult FinalHit;
 				QueryParams3.AddIgnoredActor(Hit.GetActor());
 				GetWorld()->LineTraceSingleByChannel(TestHit, Hit.ImpactPoint, WeaponMeshLocation, TRACECHANNEL_WEAPON, QueryParams3);
-			
+				GetWorld()->LineTraceSingleByChannel(TrueHit, FireLocation, Hit.ImpactPoint, TRACECHANNEL_WEAPON, QueryParams2);
 				AActor* BackTraceHit = TestHit.GetActor();
 				FinalHit = TrueHit;
 					if (BackTraceHit && BackTraceHit->IsA<ACCharacter>())

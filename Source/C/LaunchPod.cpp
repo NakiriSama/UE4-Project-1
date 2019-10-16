@@ -49,8 +49,9 @@ void ALaunchPod::PodOverlap(UPrimitiveComponent * OverlappedComponent, AActor * 
 		{
 			if (MyWeapon->Clip!= MyWeapon->ClipSetting)
 			{
-				MyWeapon->OnFireClipChange(MyWeapon->ClipSetting);
-				MyWeapon->Clip = MyWeapon->ClipSetting;
+				//MyWeapon->OnFireClipChange(MyWeapon->ClipSetting);
+				MyWeapon->ChangeClip(MyWeapon->ClipSetting);
+				
 				UGameplayStatics::PlaySoundAtLocation(this, PickupAmmoSounds, GetActorLocation());
 			}
 			
