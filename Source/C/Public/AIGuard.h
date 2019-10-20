@@ -15,7 +15,9 @@ enum class EAIStateTest:uint8
 
     Alermed,
 
-	SearchingPlayer
+	SearchingPlayer,
+
+	Dead
 
 };
 
@@ -26,6 +28,8 @@ class AMyAIController;
 class ACCharacter;
 class AAI_TargetPoint;
 class ATargetPoint;
+class UMaterialInterface;
+class UCapsuleComponent;
 
 UCLASS()
 class C_API AAIGuard : public ACharacter
@@ -64,6 +68,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 		TSubclassOf <ATargetPoint> EmptyMemoryMark;
 
+	UFUNCTION(BlueprintCallable, Category = "AI")
+		void DeathAnimation();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -91,11 +98,28 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Sound")
 		TArray<USoundBase*> AIDeathSounds;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Materials")
+	    UMaterialInterface* IdleMaterial;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Materials")
+	    UMaterialInterface* SubspiciousMaterial;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Materials")
+		UMaterialInterface* AlermedMaterial;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Materials")
+		UMaterialInterface* DeathMaterial;
+		
+
+
 	AMyAIController* AIController;
 
 	EAIStateTest GuardState;
 
 	int32 CurrentPatrolPointNum;
+
+	USkeletalMeshComponent* MeshComp;
+
 
 	/**视觉感知方程*/
 	UFUNCTION()
@@ -123,6 +147,9 @@ protected:
 
 	void MoveToNextPatrolPoint();
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TMap<EAIStateTest, UMaterialInterface*> StateMap;
+
 
 	
 private:
@@ -130,4 +157,10 @@ private:
 	FRotator OriginalRotation;
 
 	FTimerHandle TimerForResetRotator;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		UCapsuleComponent* DeathCapsuleComp;
+
+	UPROPERTY()
+	    UCapsuleComponent* DefaultCapsuleComp;
 };

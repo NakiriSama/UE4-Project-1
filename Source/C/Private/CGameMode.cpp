@@ -4,6 +4,7 @@
 #include "CCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Kismet/GameplayStatics.h"
+#include "MyAIController.h"
 
 ACGameMode::ACGameMode()
 {
@@ -13,6 +14,8 @@ ACGameMode::ACGameMode()
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
+
+	//PlayerControllerClass = AMyPlayerController::StaticClass();
 }
 
 void ACGameMode::CompleteMission(APawn* InstigationPawn, bool MissionSuccess)

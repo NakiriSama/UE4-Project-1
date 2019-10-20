@@ -5,11 +5,32 @@
 
 UMyAnimInstance::UMyAnimInstance()
 {
-
+	IsInCover = false;
 }
 
-void UMyAnimInstance::Reload()
+void UMyAnimInstance::Reload(uint8 Mod)
 {
-	Montage_Play(ReloadMontage);
+	
+	UAnimMontage* NewReloadMontage;
+	IsInCover = false;
+	switch (Mod)
+	{
+	case 0:
+		
+		NewReloadMontage = RelaxReloadMontage;
+		break;
+	case 1:
+		NewReloadMontage = AimReloadMontage;
+		break;
+	case 2:
+		IsInCover = true;
+		NewReloadMontage = CoverReloadMontage;
+		break;
+	default:
+		NewReloadMontage = RelaxReloadMontage;
+		break;
+	}
+	
+	Montage_Play(NewReloadMontage);
 	UE_LOG(LogTemp, Log, TEXT("Begin Reload!"));
 }

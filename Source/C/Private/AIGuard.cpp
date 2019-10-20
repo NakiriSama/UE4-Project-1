@@ -19,6 +19,9 @@
 #include "CCharacter.h"
 #include "AI_TargetPoint.h"
 #include "Engine/TargetPoint.h"
+#include "Classes/Materials/MaterialInterface.h"
+#include "Classes/Components/CapsuleComponent.h"
+
 
 // Sets default values
 AAIGuard::AAIGuard()
@@ -27,14 +30,18 @@ AAIGuard::AAIGuard()
 	PrimaryActorTick.bCanEverTick = true;
 	IsDead = false;
 
+
+	
+	DeathCapsuleComp=CreateDefaultSubobject<UCapsuleComponent>(TEXT("DeathCapsuleComp"));
 	PawnSensingComp = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensingComp"));
 	HealthComp = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComp"));
 	PawnSensingComp->OnSeePawn.AddDynamic(this, &AAIGuard::OnSeenPawn);
 	PawnSensingComp->OnHearNoise.AddDynamic(this, &AAIGuard::OnHearNoise);
 	PawnSensingComp->SetPeripheralVisionAngle(45.f);
 	
+	GetCharacterMovement()->MaxWalkSpeed = 200.0f;
 	GuardState = EAIStateTest::Idle;
-	GetCharacterMovement()->MaxWalkSpeed=200.0f;
+	
 	
 	bUseControllerRotationYaw = false;
 }
@@ -42,7 +49,16 @@ AAIGuard::AAIGuard()
 // Called when the game starts or when spawned
 void AAIGuard::BeginPlay()
 {
+	DefaultCapsuleComp = Cast<UCapsuleComponent>(GetRootComponent());
+	//DeathCapsuleComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	
+	StateMap.Emplace(EAIStateTest::Alermed, AlermedMaterial);
+	StateMap.Emplace(EAIStateTest::Idle, IdleMaterial);
+	StateMap.Emplace(EAIStateTest::SearchingPlayer, SubspiciousMaterial);
+	StateMap.Emplace(EAIStateTest::Subspicious, SubspiciousMaterial);
+	StateMap.Emplace(EAIStateTest::Dead,DeathMaterial);
+	MeshComp = GetMesh();
+	MeshComp->SetMaterial(1, IdleMaterial);
 	Super::BeginPlay();
 	OriginalRotation = GetActorRotation();
 	HealthComp->OnHealthChange.AddDynamic(this, &AAIGuard::OnHealthChange);
@@ -172,6 +188,7 @@ void AAIGuard::ResetOriginalRotation()
 void AAIGuard::ResetFocus()
 {
 	AIController->ClearFocus(EAIFocusPriority::Gameplay);
+	SetGuardState(EAIStateTest::Idle);
 }
 
 void AAIGuard::SetGuardState(EAIStateTest NewState)
@@ -180,9 +197,17 @@ void AAIGuard::SetGuardState(EAIStateTest NewState)
 	{
 		return;
 	}
-
+	FString path =GetPathName(StateMap[NewState]);
+	FString path2 = GetPathName(AlermedMaterial);
 	GuardState = NewState;
 
+
+
+	MeshComp->SetMaterial(1, StateMap[NewState]);
+
+
+	
+	
 	OnStateChange(GuardState);
 }
 
@@ -200,19 +225,26 @@ void AAIGuard::MoveToNextPatrolPoint()
 	
 }
 
+void AAIGuard::DeathAnimation()
+{
+	DefaultCapsuleComp->SetSimulatePhysics(true);
+	MeshComp->SetSimulatePhysics(true);
+}
+
 void AAIGuard::OnHealthChange(UHealthComponent* HealthC, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (!IsDead && Health > 0.0f)
 	{
 		
 		AIController->SetFocus(DamageCauser, EAIFocusPriority::Gameplay);
+		SetGuardState(EAIStateTest::Subspicious);
 		GetWorldTimerManager().SetTimer(TimerForResetRotator, this, &AAIGuard::ResetFocus, 2.0f);
 	}
 	if (!IsDead && Health <= 0.0f)
 	{
 		bPatorl = false;
 		IsDead = true;
-		SetGuardState(EAIStateTest::Idle);
+		SetGuardState(EAIStateTest::Dead);
 		if (AIDeathSounds[0])
 		{
 			int x = rand() % (AIDeathSounds.Num());
@@ -221,9 +253,20 @@ void AAIGuard::OnHealthChange(UHealthComponent* HealthC, float Health, float Hea
 		GetMovementComponent()->StopMovementImmediately();
 		
 		//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
+		
 		DetachFromControllerPendingDestroy();
-		SetLifeSpan(10.0f);
+		if (DefaultCapsuleComp)
+		{
+			DefaultCapsuleComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+		
+		//DeathCapsuleComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		//DeathCapsuleComp->SetCollisionObjectType(ECC_WorldStatic);
+		//DeathCapsuleComp->SetCollisionResponseToAllChannels(ECR_Block);
+		//DeathCapsuleComp->setcolli
+		//DeathCapsuleComp->SetSimulatePhysics(true);
+		//MeshComp->SetSimulatePhysics(true);
+		//SetLifeSpan(10.0f);
 	}
 }
 
@@ -232,7 +275,7 @@ void AAIGuard::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	//UNavigationSystem::SimpleMoveToActor(GetController(), TestPatrolPoint);
-
+	
 	
 
 	

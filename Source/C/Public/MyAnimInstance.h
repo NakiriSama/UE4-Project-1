@@ -17,11 +17,22 @@ class C_API UMyAnimInstance : public UAnimInstance
 public:
 	UMyAnimInstance();
 
-	void Reload();
+	void Reload(uint8 Mod);
 protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-		UAnimMontage* ReloadMontage;
+		bool IsInCover;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		UAnimMontage* RelaxReloadMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		UAnimMontage* AimReloadMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		UAnimMontage* CoverReloadMontage;
+
+	
 
 private:
 

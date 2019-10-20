@@ -104,7 +104,7 @@ void AMyWeapon::Fire()
 {
 
 	AActor* MyOwner = GetOwner();
-	if (Clip != 0)
+	if (Clip >= 1)
 	{
 		if (MyOwner)
 		{
@@ -220,7 +220,21 @@ void AMyWeapon::Fire()
 			LastFireTime = GetWorld()->TimeSeconds;
 		}
 	}
+    else 
+	{
+     	if (ClipStock >=  1)
+	    {
+			ACCharacter* MyCharacter = Cast<ACCharacter>(MyOwner);
+			MyCharacter->ToggleReload();
+		}
+		else
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, EmptyGunSounds, WeaponMeshComp->GetSocketLocation(MuzzleSocketName));
+		}
+		
+	}
 	
+
 
 }
 

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "Core.h"
 #include "GameFramework/Character.h"
 #include "Components/TimelineComponent.h"
 
@@ -58,6 +58,7 @@ class UMaterialParameterCollection;
 class UUserWidget;
 class UTimelineComponent;
 class UBoxComponent;
+class UUserWidget_AITracking;
 
 
 UCLASS(config=Game)
@@ -209,6 +210,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Magic")
 		float GetXRay();
 
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+		void SetbCanFire();
+
 	FVector GetScreenCenter() { return CameraCenter; }
 
 	/**透视技能开始动画时间线*/
@@ -329,6 +333,8 @@ protected:
 	/** Called for side to side input */
 	void MoveRight(float Value);
 
+	void AITrack();
+
 	void Marking();
 
 	void QuitMarking();
@@ -372,6 +378,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Widget")
 		TSubclassOf <UUserWidget> CrosshairBPReference;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Widget")
+		TSubclassOf <UUserWidget_AITracking> AITrackingWidgetBP;
+
+	UPROPERTY()
+	    UUserWidget_AITracking* CurrentAITrackingWidget;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Skill")
 	    USoundBase*  BeginInvisibleSound;
@@ -461,6 +473,8 @@ private:
 	//————————行为状态
 
 	bool IsInCover;
+
+	bool bCanFire;
 
 	bool IsClosedToCorner;
 

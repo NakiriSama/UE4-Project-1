@@ -72,6 +72,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Sound")
 	    TArray<USoundBase*> AKSingleSounds;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Sound")
+		USoundBase* EmptyGunSounds;
+
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category = "Weapon")
 	    TSubclassOf<UDamageType> DamageType;
 

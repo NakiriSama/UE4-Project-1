@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Core.h"
+#include "Engine.h"
 
 #define SURFACE_FLESHBODY SurfaceType1
 #define SURFACE_FLESHHEAD SurfaceType2

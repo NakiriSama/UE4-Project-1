@@ -29,6 +29,7 @@
 #include "GameFramework/DefaultPawn.h"
 #include "PhysicalMaterials//PhysicalMaterial.h"
 #include "MyAnimInstance.h"
+#include "UserWidget_AITracking.h"
 
 
 /////////////////////////////////////////////////
@@ -74,6 +75,7 @@ ACCharacter::ACCharacter()
 	bCanTakeCover = false;
 	bCanInvisible = true;
 	bCanXRay = true;
+	bCanFire = true;
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -176,6 +178,8 @@ void ACCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("XRay", IE_Pressed, this, &ACCharacter::ToggleXRay);
 
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ACCharacter::ToggleReload);
+
+	PlayerInputComponent->BindAction("AITrace", IE_Pressed, this, &ACCharacter::AITrack);
 }
 
 void ACCharacter::BeginPlay()
@@ -520,28 +524,31 @@ void ACCharacter::XRayTimelineBeginTimer()
 
 void ACCharacter::StartFireOrStartAttack()
 {
-
-	if ((CurrentWeapon && MarkingMode && !IsInCover) || IsInCorner)
+	if (bCanFire)
 	{
-		Log(ELogLevel::INFO, "StartFire");
-		if (IsInvisible)
+		if ((CurrentWeapon && MarkingMode && !IsInCover) || IsInCorner)
 		{
-			ToggleInvisibility();
+			Log(ELogLevel::INFO, "StartFire");
+			if (IsInvisible)
+			{
+				ToggleInvisibility();
+			}
+			if (IsInXRay)
+			{
+				ToggleXRay();
+			}
+			CameraCenter = FollowCamera->GetComponentRotation().Vector();
+			CurrentWeapon->StartFire();
+
+
+
 		}
-		if (IsInXRay)
+		if (!MarkingMode)
 		{
-			ToggleXRay();
+			Log(ELogLevel::INFO, "StartAttack");
 		}
-		CameraCenter = FollowCamera->GetComponentRotation().Vector();
-		CurrentWeapon->StartFire();
-
-		
-
 	}
-	if (!MarkingMode)
-	{
-		Log(ELogLevel::INFO, "StartAttack");
-	}
+
 }
 
 
@@ -661,7 +668,7 @@ void ACCharacter::ToggleInvisibility()
 			IsInvisible = !IsInvisible;
 			Log(ELogLevel::INFO, "Invisibility is not ready!");
 			return;
-			//TODO: HUD显示技能CD，提示技能未冷却
+			
 		}
 		
 
@@ -693,18 +700,38 @@ void ACCharacter::ToggleInvisibility()
 
 void ACCharacter::ToggleReload()
 {
-	if (CurrentWeapon->Clip != CurrentWeapon->ClipSetting)
+	if (CurrentWeapon->ClipStock != 0)
 	{
-		SpawnClip();
-		UGameplayStatics::PlaySoundAtLocation(this, PickupAmmoSounds, GetMesh()->GetSocketLocation(WeaponSocketName));
-		CurrentWeapon->WeaponReload();
-		UMyAnimInstance* AnimInstanceC = Cast<UMyAnimInstance>(GetMesh()->GetAnimInstance());
-		if (AnimInstanceC)
+		if (CurrentWeapon->Clip != CurrentWeapon->ClipSetting)
 		{
-			AnimInstanceC->Reload();
+			SpawnClip();
+			//UGameplayStatics::PlaySoundAtLocation(this, PickupAmmoSounds, GetMesh()->GetSocketLocation(WeaponSocketName));
+			CurrentWeapon->WeaponReload();
+			UMyAnimInstance* AnimInstanceC = Cast<UMyAnimInstance>(GetMesh()->GetAnimInstance());
+			if (AnimInstanceC)
+			{
+				if (MarkingMode)
+				{
+					AnimInstanceC->Reload(1);
+				}
+				else if (IsInCover && !MarkingMode)
+				{
+					AnimInstanceC->Reload(2);
+				}
+				else
+				{
+					AnimInstanceC->Reload(0);
+				}
+
+			}
+
 		}
+	}
+	else
+	{
 
 	}
+	
 
 }
 
@@ -777,6 +804,11 @@ float ACCharacter::GetMagic()
 float ACCharacter::GetXRay()
 {
 	return Xray.MagicPercentage;
+}
+
+void ACCharacter::SetbCanFire()
+{
+	bCanFire = !bCanFire;
 }
 
 void ACCharacter::XRayTimelineBegin(float Value)
@@ -922,7 +954,7 @@ void ACCharacter::Marking()
 					}
 					else if(Direction > 0)
 					{
-						AddForce = (CoverDirectionMovement * -400) + FVector(0, 0, 1) * 80;
+						AddForce = (CoverDirectionMovement * -300) + FVector(0, 0, 1) * 80;
 					}
 					
 					LaunchCharacter(AddForce , true, true);
@@ -988,7 +1020,7 @@ void ACCharacter::QuitMarking()
 		}
 		else
 		{
-			AddForce = (CoverDirectionMovement * 400) + FVector(0, 0, 1) * 80;
+			AddForce = (CoverDirectionMovement * 300) + FVector(0, 0, 1) * 80;
 		}
 		LaunchCharacter(AddForce, true, true);
 		IsInCorner = false;
@@ -1138,6 +1170,21 @@ void ACCharacter::MoveRight(float Value)
 }
 
 
+
+void ACCharacter::AITrack()
+{
+	
+	CurrentAITrackingWidget = CreateWidget<UUserWidget_AITracking>(GetWorld(), AITrackingWidgetBP);
+	if (CurrentAITrackingWidget)
+	{
+		Log(ELogLevel::INFO, "GET!!");
+		CurrentAITrackingWidget->AddToViewport();
+	}
+	else
+	{
+		Log(ELogLevel::INFO, "FUCK!!!");
+	}
+}
 
 void ACCharacter::Log(ELogLevel LogLevel, FString Message)
 {
