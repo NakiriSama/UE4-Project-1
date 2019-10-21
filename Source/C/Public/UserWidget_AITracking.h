@@ -17,6 +17,8 @@ public:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	UUserWidget_AITracking(const FObjectInitializer& ObjectInitializer);
 	virtual void NativeConstruct() override;
+
+	bool TrackTracingline(FVector TraceStart, FVector TraceEnd, const bool IsInXray);
 	
 protected:
 private:

@@ -1173,17 +1173,34 @@ void ACCharacter::MoveRight(float Value)
 
 void ACCharacter::AITrack()
 {
-	
-	CurrentAITrackingWidget = CreateWidget<UUserWidget_AITracking>(GetWorld(), AITrackingWidgetBP);
-	if (CurrentAITrackingWidget)
+	FVector FireLocation;
+	FRotator EyeRotation;
+	GetActorEyesViewPoint(FireLocation, EyeRotation);
+	FVector TraceStart;
+	FVector TraceEnd;
+	TraceStart = GetPawnViewLocation();
+	TraceEnd = TraceStart + (EyeRotation.Vector() * 10000);
+
+	if (MarkingMode)
 	{
-		Log(ELogLevel::INFO, "GET!!");
-		CurrentAITrackingWidget->AddToViewport();
+		CurrentAITrackingWidget = CreateWidget<UUserWidget_AITracking>(GetWorld(), AITrackingWidgetBP);
+		if (CurrentAITrackingWidget)
+		{
+			
+			if (CurrentAITrackingWidget->TrackTracingline(TraceStart, TraceEnd, IsInXRay))
+			{
+				Log(ELogLevel::INFO, "GET!!");
+				CurrentAITrackingWidget->AddToViewport();
+			}
+			
+			
+		}
+		else
+		{
+			Log(ELogLevel::INFO, "FUCK!!!");
+		}
 	}
-	else
-	{
-		Log(ELogLevel::INFO, "FUCK!!!");
-	}
+
 }
 
 void ACCharacter::Log(ELogLevel LogLevel, FString Message)
