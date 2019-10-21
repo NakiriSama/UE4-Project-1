@@ -7,11 +7,27 @@
 #include "Kismet/GameplayStatics.h"
 #include "MyWeapon.h"
 #include "AIGuard.h"
+#include "MyPlayerController.h"
+
 
 
 void UUserWidget_AITracking::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
-
+	Super::NativeTick(MyGeometry,InDeltaTime);
+	int32 MaxX;
+	int32 MaxY;
+	//SetPositionInViewport();
+	AIPosition = HitAI->GetMesh()->GetSocketLocation(SocketName);
+	GetOwningPlayer()->ProjectWorldLocationToScreen(AIPosition, ScreenPosition);
+	GetOwningPlayer()->GetViewportSize(MaxX, MaxY);
+	ScreenPosition.X = FMath::Clamp(ScreenPosition.X, 27.5f, (float)(MaxX-27.5));
+	ScreenPosition.Y = FMath::Clamp(ScreenPosition.Y, 27.5f, (float)(MaxY-27.5));
+	//UE_LOG(LogTemp, Log, TEXT("%f,%f"), ScreenPosition.X, ScreenPosition.Y);
+	SetPositionInViewport(ScreenPosition);
+	if (HitAI->IsDead)
+	{
+		RemoveFromParent();
+	}
 }
 
 UUserWidget_AITracking::UUserWidget_AITracking(const FObjectInitializer& ObjectInitializer)
@@ -25,9 +41,11 @@ void UUserWidget_AITracking::NativeConstruct()
 	Super::NativeConstruct();
 }
 
-bool UUserWidget_AITracking::TrackTracingline(FVector TraceStart, FVector TraceEnd, const bool IsInXray)
+bool UUserWidget_AITracking::TrackTracingline(FVector TraceStart, FVector TraceEnd, const bool IsInXray, bool &Marked, AAIGuard* &MarkedAI)
 {
-	ACCharacter* MyPlayer = Cast<ACCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
+
+	MyPlayer = Cast<ACCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
+	MyPlayerController = Cast<AMyPlayerController>(MyPlayer->GetController());
 	FHitResult Hit;
 	AActor* HitActor;
 	FCollisionQueryParams QueryParams;
@@ -54,21 +72,37 @@ bool UUserWidget_AITracking::TrackTracingline(FVector TraceStart, FVector TraceE
 			HitActor = Hit.GetActor();
 		}
 	}
-	if (Hit.GetActor()->IsA<AAIGuard>())
+	if (Hit.GetActor())
 	{
-		AAIGuard* HitAI = Cast<AAIGuard>(Hit.GetActor());
-		if (HitAI->IsDead)
+		if (Hit.GetActor()->IsA<AAIGuard>())
 		{
-			return false;
+
+			HitAI = Cast<AAIGuard>(Hit.GetActor());
+
+			if (HitAI->IsDead)
+			{
+
+				return false;
+			}
+			else
+			{
+				Marked = HitAI->IsMarked;
+				MarkedAI = HitAI;
+
+				return true;
+			}
 		}
-		else 
-		{
-			return true;
-		}
+	
 	}
 
 
 	return false;
 	
+}
+
+void UUserWidget_AITracking::CancelMarked()
+{
+	
+	HitAI->IsMarked = !HitAI->IsMarked;
 }
 

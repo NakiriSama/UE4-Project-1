@@ -30,6 +30,7 @@
 #include "PhysicalMaterials//PhysicalMaterial.h"
 #include "MyAnimInstance.h"
 #include "UserWidget_AITracking.h"
+#include "AIGuard.h"
 
 
 /////////////////////////////////////////////////
@@ -49,7 +50,7 @@ ACCharacter::ACCharacter()
 	StandCoverSpeed = 250;
 	CoverDirection = 1;
 	////////////////////////////
-	
+	MarkNumber = 0;
 	Invis.FullMagic = 100.0f;
 	Xray.FullMagic = 100.0f;
 	Invis.Magic = 100.0f;
@@ -184,6 +185,8 @@ void ACCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputCo
 
 void ACCharacter::BeginPlay()
 {
+
+
 	Super::BeginPlay();
 	DefaultSocketOffset = RightSocketOffset;
 	//AMyWeapon* CurrentWeapon = GetWorld()->SpawnActor<AMyWeapon>()
@@ -885,6 +888,8 @@ void ACCharacter::AddControllerPitchInput(float Val)
 }
 
 
+
+
 FVector ACCharacter::GetPawnViewLocation() const
 {
 	if (FollowCamera)
@@ -1178,19 +1183,49 @@ void ACCharacter::AITrack()
 	GetActorEyesViewPoint(FireLocation, EyeRotation);
 	FVector TraceStart;
 	FVector TraceEnd;
+	AAIGuard* MarkedAI;
 	TraceStart = GetPawnViewLocation();
 	TraceEnd = TraceStart + (EyeRotation.Vector() * 10000);
-
+	bool Marked;
 	if (MarkingMode)
 	{
 		CurrentAITrackingWidget = CreateWidget<UUserWidget_AITracking>(GetWorld(), AITrackingWidgetBP);
 		if (CurrentAITrackingWidget)
 		{
 			
-			if (CurrentAITrackingWidget->TrackTracingline(TraceStart, TraceEnd, IsInXRay))
+			if (CurrentAITrackingWidget->TrackTracingline(TraceStart, TraceEnd, IsInXRay,Marked, MarkedAI))
 			{
-				Log(ELogLevel::INFO, "GET!!");
-				CurrentAITrackingWidget->AddToViewport();
+				if (!Marked)
+				{
+					//Log(ELogLevel::INFO, "GET!!");
+					MarkedAI->MyMark = CurrentAITrackingWidget;
+					CurrentAITrackingWidget->CancelMarked();
+					MarkedAIQueue.Enqueue(MarkedAI);
+					UGameplayStatics::PlaySound2D(this, MarkOnSound);
+					CurrentAITrackingWidget->AddToViewport();
+					if (MarkNumber<MaxMarkNumber)
+					{
+						MarkNumber++;
+					}
+					else
+					{
+						MarkedAIQueue.Peek(MarkedAI);
+						MarkedAI->MyMark->CancelMarked();
+						MarkedAI->MyMark->RemoveFromParent();
+						MarkedAIQueue.Pop();
+					}
+				}
+				else
+				{
+					//Log(ELogLevel::INFO, "Try to delete");
+					MarkedAI->MyMark->CancelMarked();
+					PopElementinAIqueue(MarkedAIQueue, MarkedAI);
+					MarkNumber--;
+					UGameplayStatics::PlaySound2D(this, MarkOffSound);
+					MarkedAI->MyMark->RemoveFromParent();
+					
+				}
+				
 			}
 			
 			
@@ -1270,3 +1305,23 @@ void ACCharacter::Log(ELogLevel LogLevel, FString Message, ELogOutput LogOutput)
 		}
 	}
 }
+
+
+void ACCharacter::PopElementinAIqueue(TQueue<AAIGuard*> &Queue, AAIGuard* Element)
+{
+	TQueue<AAIGuard*> QueueTemp;
+	AAIGuard* x;
+	while (!Queue.IsEmpty())
+	{
+		Queue.Peek(x);
+		Queue.Pop();
+		if (x != Element)
+		{
+			QueueTemp.Enqueue(x);
+		}
+	}
+	Swap(QueueTemp, Queue);
+
+}
+
+

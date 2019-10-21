@@ -20,6 +20,16 @@ enum class EAIStateTest:uint8
 	Dead
 
 };
+USTRUCT()
+struct FStateStruct
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	UMaterialInterface* StateMaterialsls;
+	UPROPERTY()
+	USoundBase* StateSounds;
+};
 
 class UPawnSensingComponent;
 class UHealthComponent;
@@ -30,6 +40,7 @@ class AAI_TargetPoint;
 class ATargetPoint;
 class UMaterialInterface;
 class UCapsuleComponent;
+class UUserWidget_AITracking;
 
 UCLASS()
 class C_API AAIGuard : public ACharacter
@@ -47,9 +58,14 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "AI")
 		bool IsDead;
 
+	UPROPERTY(BlueprintReadOnly, Category = "AI")
+		bool IsMarked;
+
 	/**行为树组成，在蓝图中选择行为树*/
 	UPROPERTY(EditAnywhere, Category = "Behavior")
 		UBehaviorTree* AIBehaviorTree;
+
+	UUserWidget_AITracking* MyMark;
 
 	/**获取巡逻点数组 用于AIController给Blackboard赋值*/
 	TArray<AActor*> GetPatrolPoints() const;
@@ -109,6 +125,15 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Materials")
 		UMaterialInterface* DeathMaterial;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Sounds")
+		USoundBase* IdleSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Sounds")
+		USoundBase* SubspiciousSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Sounds")
+		USoundBase* AlermedSound;
 		
 
 
@@ -147,8 +172,8 @@ protected:
 
 	void MoveToNextPatrolPoint();
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TMap<EAIStateTest, UMaterialInterface*> StateMap;
+	UPROPERTY()
+	TMap<EAIStateTest, FStateStruct> StateMap;
 
 
 	

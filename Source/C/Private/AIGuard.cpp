@@ -21,6 +21,7 @@
 #include "Engine/TargetPoint.h"
 #include "Classes/Materials/MaterialInterface.h"
 #include "Classes/Components/CapsuleComponent.h"
+#include "UserWidget_AITracking.h"
 
 
 // Sets default values
@@ -29,7 +30,7 @@ AAIGuard::AAIGuard()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	IsDead = false;
-
+	IsMarked = false;
 
 	
 	DeathCapsuleComp=CreateDefaultSubobject<UCapsuleComponent>(TEXT("DeathCapsuleComp"));
@@ -51,12 +52,26 @@ void AAIGuard::BeginPlay()
 {
 	DefaultCapsuleComp = Cast<UCapsuleComponent>(GetRootComponent());
 	//DeathCapsuleComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	
-	StateMap.Emplace(EAIStateTest::Alermed, AlermedMaterial);
-	StateMap.Emplace(EAIStateTest::Idle, IdleMaterial);
-	StateMap.Emplace(EAIStateTest::SearchingPlayer, SubspiciousMaterial);
-	StateMap.Emplace(EAIStateTest::Subspicious, SubspiciousMaterial);
-	StateMap.Emplace(EAIStateTest::Dead,DeathMaterial);
+	FStateStruct ForState;
+	ForState.StateMaterialsls = AlermedMaterial;
+	ForState.StateSounds = AlermedSound;
+	StateMap.Emplace(EAIStateTest::Alermed, ForState);
+	ForState.StateMaterialsls = SubspiciousMaterial;
+	ForState.StateSounds = SubspiciousSound;
+	StateMap.Emplace(EAIStateTest::Subspicious, ForState);
+	ForState.StateMaterialsls = SubspiciousMaterial;
+	ForState.StateSounds = SubspiciousSound;
+	StateMap.Emplace(EAIStateTest::SearchingPlayer, ForState);
+	ForState.StateMaterialsls = IdleMaterial;
+	ForState.StateSounds = IdleSound;
+	StateMap.Emplace(EAIStateTest::Idle, ForState);
+	//ForState.StateMaterialsls = DeathMaterial;
+	//ForState.StateSounds = SubspiciousSound;
+	//StateMap.Emplace(EAIStateTest::Dead, ForState);
+	//StateMap.Emplace(EAIStateTest::Idle, IdleMaterial);
+	//StateMap.Emplace(EAIStateTest::SearchingPlayer, SubspiciousMaterial);
+	//StateMap.Emplace(EAIStateTest::Subspicious, SubspiciousMaterial);
+	//StateMap.Emplace(EAIStateTest::Dead,DeathMaterial);
 	MeshComp = GetMesh();
 	MeshComp->SetMaterial(1, IdleMaterial);
 	Super::BeginPlay();
@@ -96,7 +111,11 @@ void AAIGuard::OnSeenPawn(APawn * SeenPawn)
 		  {
 			  AIController->MyAIState = EAIState::SeePlayer;
 		  }
-		  SetGuardState(EAIStateTest::Alermed);
+		  if (GuardState != EAIStateTest::Alermed && GuardState != EAIStateTest::SearchingPlayer)
+		  {
+			  SetGuardState(EAIStateTest::Alermed);
+		  }
+		
 		  float Distance = SeenPawn->GetDistanceTo(this);
 	  }
 
@@ -197,13 +216,13 @@ void AAIGuard::SetGuardState(EAIStateTest NewState)
 	{
 		return;
 	}
-	FString path =GetPathName(StateMap[NewState]);
-	FString path2 = GetPathName(AlermedMaterial);
+
 	GuardState = NewState;
 
 
 
-	MeshComp->SetMaterial(1, StateMap[NewState]);
+	MeshComp->SetMaterial(1, StateMap[NewState].StateMaterialsls);
+	UGameplayStatics::PlaySoundAtLocation(this, StateMap[NewState].StateSounds, GetActorLocation());
 
 
 	
@@ -235,16 +254,23 @@ void AAIGuard::OnHealthChange(UHealthComponent* HealthC, float Health, float Hea
 {
 	if (!IsDead && Health > 0.0f)
 	{
+		if (GuardState != EAIStateTest::Alermed)
+		{
+		    AIController->SetFocus(DamageCauser, EAIFocusPriority::Gameplay);
+	
+			SetGuardState(EAIStateTest::Subspicious);
 		
-		AIController->SetFocus(DamageCauser, EAIFocusPriority::Gameplay);
-		SetGuardState(EAIStateTest::Subspicious);
-		GetWorldTimerManager().SetTimer(TimerForResetRotator, this, &AAIGuard::ResetFocus, 2.0f);
+	
+		    GetWorldTimerManager().SetTimer(TimerForResetRotator, this, &AAIGuard::ResetFocus, 2.0f);
+		}
 	}
 	if (!IsDead && Health <= 0.0f)
 	{
 		bPatorl = false;
 		IsDead = true;
-		SetGuardState(EAIStateTest::Dead);
+
+		GuardState = EAIStateTest::Dead;
+		MeshComp->SetMaterial(1, DeathMaterial);
 		if (AIDeathSounds[0])
 		{
 			int x = rand() % (AIDeathSounds.Num());

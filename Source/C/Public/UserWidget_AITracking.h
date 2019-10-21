@@ -9,6 +9,9 @@
 /**
  * 
  */
+class ACCharacter;
+class AMyPlayerController;
+class AAIGuard;
 UCLASS()
 class C_API UUserWidget_AITracking : public UUserWidget
 {
@@ -18,9 +21,29 @@ public:
 	UUserWidget_AITracking(const FObjectInitializer& ObjectInitializer);
 	virtual void NativeConstruct() override;
 
-	bool TrackTracingline(FVector TraceStart, FVector TraceEnd, const bool IsInXray);
+	bool TrackTracingline(FVector TraceStart, FVector TraceEnd, const bool IsInXray, bool &IsMarked, AAIGuard* &MarkedAI);
 	
+	void CancelMarked();
 protected:
+
+
+
+
+
+	FVector2D ScreenPosition;
+
+	FVector2D Test;
+
+	AAIGuard* HitAI;
+
+	FVector AIPosition;
+
+	FName SocketName = "MarkSocket";
+
+	ACCharacter* MyPlayer;
+
+	AMyPlayerController* MyPlayerController;
+
 private:
 	
 };

@@ -59,6 +59,7 @@ class UUserWidget;
 class UTimelineComponent;
 class UBoxComponent;
 class UUserWidget_AITracking;
+class AAIGuard;
 
 
 UCLASS(config=Game)
@@ -397,6 +398,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Skill")
 	    USoundBase*  EndInvisibleSound;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Skill")
+		USoundBase*  MarkOnSound;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Skill")
+		USoundBase*  MarkOffSound;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Skill")
+	    int8 MaxMarkNumber;
+
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Sound")
 		USoundBase* PickupAmmoSounds;
 
@@ -456,7 +467,8 @@ protected:
 
 	virtual void BeginPlay() override;
 
-	
+	TQueue<AAIGuard*> MarkedAIQueue;
+	TQueue<int> TestQueue;
 
 	//virtual void Crouch(bool bClientSimulation = false) override;
 
@@ -468,6 +480,9 @@ private:
 
 	virtual void AddControllerPitchInput(float Val) override;
 
+	void PopElementinAIqueue(TQueue<AAIGuard*> &Queue, AAIGuard* Element);
+
+	void PopElementinTest(TQueue<int> &Queue, int Element);
 	 ACoverActor* Cover;
 
 	//¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ªÐÐÎª×´Ì¬
@@ -513,6 +528,8 @@ private:
 
 	int8 CoverDirection;
 
+	int8 MarkNumber;
+
 	FName WeaponSocketName = "Weapon_Socket";
 
 
@@ -531,6 +548,8 @@ private:
 	Energy Invis;
 
 	Energy Xray;
+
+
 	/**
      * Log - prints a message to all the log outputs with a specific color
      * @param LogLevel {@see ELogLevel} affects color of log
