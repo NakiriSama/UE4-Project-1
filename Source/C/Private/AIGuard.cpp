@@ -157,7 +157,7 @@ void AAIGuard::OnHearNoise(APawn* HearPawn, const FVector& Location, float Volum
 			return;
 		}
 
-		DrawDebugSphere(GetWorld(), Location, 32.0f, 12.0f, FColor::Green, false, 10.0f);
+		//DrawDebugSphere(GetWorld(), Location, 32.0f, 12.0f, FColor::Green, false, 10.0f);
 		//UE_LOG(LogTemp, Log, TEXT("Find you!"));
 
 		AIController->MyAIState = EAIState::HearPlayer;
@@ -207,7 +207,11 @@ void AAIGuard::ResetOriginalRotation()
 void AAIGuard::ResetFocus()
 {
 	AIController->ClearFocus(EAIFocusPriority::Gameplay);
-	SetGuardState(EAIStateTest::Idle);
+	if (GuardState!=EAIStateTest::Alermed)
+	{
+		SetGuardState(EAIStateTest::Idle);
+	}
+	
 }
 
 void AAIGuard::SetGuardState(EAIStateTest NewState)
@@ -215,6 +219,11 @@ void AAIGuard::SetGuardState(EAIStateTest NewState)
 	if (GuardState == NewState)
 	{
 		return;
+	}
+	if ((GuardState == EAIStateTest::Idle || GuardState ==EAIStateTest::Subspicious) &&NewState == EAIStateTest::Alermed)
+	{
+		ACCharacter* MyPlayer = Cast<ACCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
+		MyPlayer->ChangeAlertLevels(20.0f);
 	}
 
 	GuardState = NewState;
@@ -285,7 +294,9 @@ void AAIGuard::OnHealthChange(UHealthComponent* HealthC, float Health, float Hea
 		{
 			DefaultCapsuleComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
-		
+		ACCharacter* MyPlayer = Cast<ACCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
+		MyPlayer->ChangeAlertLevels(-20.0f);
+		GetMesh()->CustomDepthStencilValue = 2;
 		//DeathCapsuleComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		//DeathCapsuleComp->SetCollisionObjectType(ECC_WorldStatic);
 		//DeathCapsuleComp->SetCollisionResponseToAllChannels(ECR_Block);

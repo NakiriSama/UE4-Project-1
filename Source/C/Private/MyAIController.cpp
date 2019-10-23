@@ -44,6 +44,7 @@ void AMyAIController::OnPossess(APawn* InPawn)
 
 		PatrolPoints = AI->GetPatrolPoints();
 		BlackboardComp->SetValue<UBlackboardKeyType_Object>(BlackboardComp->GetKeyID("SelfActor"), AI);
+	
 		if (PatrolPoints[0])
 		{
 			BlackboardComp->SetValue<UBlackboardKeyType_Object>(NextPatrolPointID, PatrolPoints[0]);

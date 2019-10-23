@@ -6,6 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "CGameMode.generated.h"
 
+class UUserWidget_AlertLevels;
+
 UCLASS(minimalapi)
 class ACGameMode : public AGameModeBase
 {
@@ -18,8 +20,22 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Sounds")
 		USoundBase*  GameOverSound;
 
+	virtual void BeginPlay() override;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Widget")
+		TSubclassOf <UUserWidget_AlertLevels> AlertLevelWidgetBP;
+
+	UPROPERTY()
+		UUserWidget_AlertLevels* CurrentAlertLevelWidget;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Alert")
+		float LoseAlertLevels;
+
 public:
 	ACGameMode();
+
+	UFUNCTION(BlueprintPure, Category = "Power")
+	float GetLoseAlertLevels() const;
 
 	void CompleteMission(APawn* InstigationPawn, bool MissionSuccess);
 

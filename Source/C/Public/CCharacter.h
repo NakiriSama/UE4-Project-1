@@ -253,7 +253,11 @@ public:
 
 	int8 GetCoverDirction() const { return CoverDirection; }
 
+	UFUNCTION(BlueprintCallable, Category = "Alert")
+		float GetMyAlertLevels() const { return MyAlertLevels; }
 
+	UFUNCTION(BlueprintCallable, Category = "Alert")
+		void ChangeAlertLevels(float Value);
 protected:
 	void FootstepSurface();
 
@@ -283,8 +287,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Player", meta = (ClampMin = 0.1, ClampMax = 100))
 		float CoverOutCameraSpeed;
 
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player", meta = (ClampMin = 0.1, ClampMax = 100))
+		float AlertSpeed;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Movement")
 	    float StandCoverSpeed;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Alert")
+		float MyAlertLevels;
 
 	//float DefaultFOV;
 
@@ -324,6 +335,10 @@ protected:
 	/** 是否打开屏幕的Log显示 */
 	UPROPERTY(EditDefaultsOnly, Category = "Log")
 		bool OpenLog;
+
+	bool IsChangeAlert;
+
+	float AlertValue;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "PlayerEffect")
 		UParticleSystem*  InvisibilityEffect;

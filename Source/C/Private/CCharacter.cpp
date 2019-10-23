@@ -63,7 +63,7 @@ ACCharacter::ACCharacter()
 	Xray.MagicValue = 0.0f;
 	
 	GetCharacterMovement()->MaxWalkSpeed = DefaultSpeed;
-	
+	IsChangeAlert = false;
 	IsDead = false;
 	IsCrouchWalking = false;
 	IsStandCover = false;
@@ -192,7 +192,7 @@ void ACCharacter::BeginPlay()
 	//AMyWeapon* CurrentWeapon = GetWorld()->SpawnActor<AMyWeapon>()
 	DefaultCameraLocation = FollowCamera->GetRelativeTransform().GetLocation();
 	RightCornerCamera = LeftCornerCamera = DefaultCameraLocation;
-	
+	MyAlertLevels = 1.f;
 	bIsCrouching = false;
 	//ZoonoutCooldown = true;
 	FActorSpawnParameters SpawnParameter;
@@ -327,7 +327,15 @@ void ACCharacter::Tick(float DeltaTime)
 	{
 		SpreadCrosshair(Velocity);
 	}
-	
+	if (IsChangeAlert)
+	{
+		float AlertLevels = FMath::FInterpTo(MyAlertLevels, AlertValue, DeltaTime, AlertSpeed);
+		MyAlertLevels = AlertLevels;
+		if (MyAlertLevels == AlertValue)
+		{
+			IsChangeAlert = false;
+		}
+	}
 	if (IsInCover)
 	{
 		FVector NewCoverCameraLocation;
@@ -525,6 +533,12 @@ void ACCharacter::XRayTimelineBeginTimer()
 
 }
 
+void ACCharacter::ChangeAlertLevels(float Value)
+{
+	IsChangeAlert = true;
+	AlertValue = FMath::Clamp(MyAlertLevels+Value,0.f,100.f);
+}
+
 void ACCharacter::StartFireOrStartAttack()
 {
 	if (bCanFire)
@@ -559,8 +573,11 @@ void ACCharacter::StartFireOrStartAttack()
 void ACCharacter::StopFireOrAttackEnd()
 {
 	
-	
+	if (CurrentWeapon)
+	{
 		CurrentWeapon->StopFire();
+	}
+		
 	
 }
 
@@ -1212,7 +1229,11 @@ void ACCharacter::AITrack()
 						MarkedAIQueue.Peek(MarkedAI);
 						MarkedAI->MyMark->CancelMarked();
 						MarkedAI->MyMark->RemoveFromParent();
-						MarkedAIQueue.Pop();
+						if (!MarkedAIQueue.IsEmpty())
+						{
+							MarkedAIQueue.Pop();
+						}
+						
 					}
 				}
 				else

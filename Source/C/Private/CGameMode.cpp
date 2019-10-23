@@ -5,6 +5,8 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "MyAIController.h"
+#include "UserWidget_AlertLevels.h"
+
 
 ACGameMode::ACGameMode()
 {
@@ -17,6 +19,24 @@ ACGameMode::ACGameMode()
 
 	//PlayerControllerClass = AMyPlayerController::StaticClass();
 }
+
+
+void ACGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+	if (AlertLevelWidgetBP)
+	{
+		CurrentAlertLevelWidget = CreateWidget<UUserWidget_AlertLevels>(GetWorld(), AlertLevelWidgetBP);
+		if (CurrentAlertLevelWidget)
+		{
+			CurrentAlertLevelWidget->AddToViewport();
+		}
+	}
+
+	
+}
+
+
 
 void ACGameMode::CompleteMission(APawn* InstigationPawn, bool MissionSuccess)
 {
@@ -57,3 +77,8 @@ void ACGameMode::CompleteMission(APawn* InstigationPawn, bool MissionSuccess)
 
 	OnMissionCompleted(InstigationPawn,  MissionSuccess);
 }
+float ACGameMode::GetLoseAlertLevels() const
+{
+	return LoseAlertLevels;
+}
+

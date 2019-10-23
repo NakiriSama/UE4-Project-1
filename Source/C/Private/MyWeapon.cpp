@@ -175,7 +175,7 @@ void AMyWeapon::Fire()
 				}
 				if (SurfaceType == SURFACE_AIEYE)
 				{
-					TrueDamage *= 5.0;
+					TrueDamage *= 2;
 				}
 				if (SurfaceType == SURFACE_AIBODY)
 				{
